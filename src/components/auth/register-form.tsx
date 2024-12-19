@@ -46,7 +46,7 @@ export default function RegisterForm() {
         if (res.error) {
           setError(res.error);
         } else {
-          setSuccess("Login successful");
+          setSuccess(res.success || "");
         }
       });
     });

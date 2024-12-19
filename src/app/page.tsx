@@ -29,7 +29,7 @@ export default function Home() {
           🔒 Auth
         </h1>
         <p className="text-white text-lg text-center">
-          A auth setup wuth authjs
+          A auth setup with authjs
         </p>
         <LogingBtn mode="modal">
           <Button

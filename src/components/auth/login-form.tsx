@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition } from "react";
 import CardWrapper from "./CardWrapper";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,20 +47,15 @@ export default function LoginForm() {
 
     startTransition(() => {
       login(value).then((res) => {
-        if (res.error) {
+        if (res && res.error) {
           setError(res.error);
         } else {
-          setSuccess("Login successful");
+          setSuccess(res.success || "");
+          // TODO: add when we do 2FA
         }
       });
     });
-
-    console.log(value);
   };
-
-  useEffect(() => {
-    // Any client-side only logic can go here
-  }, []);
 
   return (
     <CardWrapper

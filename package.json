@@ -18,6 +18,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cuuid": "^0.3.0",
     "install": "^0.13.0",
     "lucide-react": "^0.468.0",
     "next": "15.1.0",
@@ -26,8 +27,11 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.1",
     "react-icons": "^5.4.0",
+    "react-spinners": "^0.15.0",
+    "resend": "^4.0.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.0.3",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -36,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
     "postcss": "^8",
