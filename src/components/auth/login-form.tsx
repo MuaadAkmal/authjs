@@ -20,6 +20,7 @@ import { Button } from "../ui/button";
 import { FormSuccess } from "../form-success";
 import { FormError } from "../form-error";
 import { login } from "@/action/authAction";
+import Link from "next/link";
 
 type LoginFormType = z.infer<typeof LoginSchema>;
 
@@ -99,6 +100,14 @@ export default function LoginForm() {
                       placeholder="*******"
                     />
                   </FormControl>
+                  <Button
+                    size={"sm"}
+                    variant={"link"}
+                    asChild
+                    className="px-0 font-normal"
+                  >
+                    <Link href="/auth/reset">Forgot password?</Link>
+                  </Button>
                   <FormMessage />
                 </FormItem>
               )}
