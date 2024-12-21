@@ -10,14 +10,20 @@ import { signIn } from "@/auth";
 import { DEFAULT_LOGIN_REDIRECT } from "@/lib/routeRule";
 import { AuthError } from "next-auth";
 import { generateVerificationToken } from "@/lib/verification-token";
-import { sendVerificationEmail } from "@/lib/mail";
+import { sendTwoFactorTokenMail, sendVerificationEmail } from "@/lib/mail";
+import { generateTwoFactorToken } from "@/lib/token";
+import { getTwoFactorTokenByEmail } from "@/lib/two-factor-token";
+import { getTwoFactorConfrimationByUserId } from "@/lib/two-factor-confirmation";
 
-export const login = async (values: z.infer<typeof LoginSchema>) => {
+export const login = async (
+  values: z.infer<typeof LoginSchema>,
+  callbackUrl: string
+) => {
   const safeValues = LoginSchema.safeParse(values);
   if (!safeValues.success) {
     return { error: "Invalid email or password " };
   }
-  const { email, password } = safeValues.data;
+  const { email, password, code } = safeValues.data;
   const existingUser = await getUserByEmail(email);
 
   if (!existingUser || !existingUser.email || !existingUser.password) {
@@ -35,11 +41,53 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     return { success: "Verification email sent!" };
   }
 
+  if (existingUser.isTwoFactorEnabled && existingUser.email) {
+    if (code) {
+      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
+      if (!twoFactorToken) return { error: "Invalid two factor token" };
+      if (twoFactorToken.token !== code) {
+        return { error: "Invalid two factor token" };
+      }
+      const hasExpired = new Date() > new Date(twoFactorToken.expires);
+      if (hasExpired) {
+        return { error: "Two factor token expired" };
+      }
+
+      await prisma.twoFactorToken.delete({
+        where: {
+          id: twoFactorToken.id,
+        },
+      });
+
+      const existingConfirmation = await getTwoFactorConfrimationByUserId(
+        existingUser.id
+      );
+      if (existingConfirmation) {
+        await prisma.twoFactorConfirmation.delete({
+          where: {
+            id: existingConfirmation.id,
+          },
+        });
+      }
+
+      await prisma.twoFactorConfirmation.create({
+        data: {
+          userId: existingUser.id,
+        },
+      });
+    } else {
+      const twoFactorToken = await generateTwoFactorToken(existingUser.email);
+      await sendTwoFactorTokenMail(existingUser.email, twoFactorToken.token);
+
+      return { twoFactor: true };
+    }
+  }
+
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -86,10 +134,6 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
       verificationToken.email,
       verificationToken.token
     );
-
-
-
-
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
       switch (e.code) {
